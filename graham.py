@@ -3,17 +3,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class graham:
+	def __init__(self):
+		self.pSet = []
+		self.hullPts = []
+
+		plt.plot(0,0,'go')
+
+		cid = plt.figure(1).canvas.mpl_connect('button_press_event', self.onClick)
+
+
+
 	@staticmethod
 	def genRandPts(n):
-		pSet = []
+		pts = []
 		for i in range(n):
 			pt = [random.randint(-100,100),random.randint(-1000,1000)]
-			while (pt in pSet): #guarantee unique points
+			while (pt in pts): #guarantee unique points
 				pt = [random.randint(-1000,1000),random.randint(-1000,1000)]
 
-			pSet.append([random.randint(-1000,1000),random.randint(-1000,1000)])
+			pts.append([random.randint(-1000,1000),random.randint(-1000,1000)])
 
-		return pSet
+		return pts
+
 
 	def setPointSet(self, p):
 		self.pSet = p
@@ -21,9 +32,25 @@ class graham:
 	def addPoint(self, p):
 		self.pSet.append(p)
 
+	def onClick(self, event):
+		if event.xdata is None:
+			return
+		if event.button == 1:
+			self.pSet.append([event.xdata,event.ydata])
+			plt.plot(event.xdata, event.ydata, 'bo')
+			plt.figure(1).canvas.draw()
+		if event.button == 3:
+			self.computeHull()
+			self.setupPlot()
+			plt.figure(1).canvas.draw()
+
+
 
 	def computeHull(self):
-		# find the bottom right point in the set
+		if len(self.pSet) == 0:
+			return
+
+		# find the lowest point of the set - right wins ties
 		lowIdx = 0
 		min = self.pSet[0][1]
 		for p in range(len(self.pSet)):
@@ -94,16 +121,15 @@ class graham:
 		return ((a[0]*b[1])-(b[0]*a[1]))
 
 
-	def showPlot(self):
+	def setupPlot(self):
+		plt.clf()
 		x = []
 		y = []
 		for n in range(len(self.pSet)):
 			x.append(self.pSet[n][0])
 			y.append(self.pSet[n][1])
 
-
-
-		self.hullPts = []
+		self.hullPts[:] = []
 		for h in self.hullStack:
 			self.hullPts.append(self.pSet[h])
 
@@ -124,4 +150,6 @@ class graham:
 
 		plt.axis([minX, maxX, minY, maxY])
 
+
+	def showPlot(self):
 		plt.show()
