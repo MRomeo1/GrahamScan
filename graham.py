@@ -7,7 +7,7 @@ class graham:
 		self.pSet = []
 		self.hullPts = []
 
-		plt.plot(0,0,'go')
+		self.incrementalMode = True
 
 		cid = plt.figure(1).canvas.mpl_connect('button_press_event', self.onClick)
 
@@ -33,7 +33,7 @@ class graham:
 		self.pSet.append(p)
 
 	def onClick(self, event):
-		if event.xdata is None:
+		if (event.xdata is None) or (event.ydata is None):
 			return
 		if event.button == 1:
 			self.pSet.append([event.xdata,event.ydata])
@@ -71,13 +71,23 @@ class graham:
 		self.pSet = sorted(self.pSet[1:], cmp=self.thetaCompare)
 		self.pSet.insert(0,self.lowPt)
 
-
+		#initialize the hullStack with the lowest point and min theta
 		self.hullStack = []
 		self.hullStack.append(0)
 		self.hullStack.append(1)
 
+		#iterate over the theta list and find the CH
 		p = 2
 		while p < len(self.pSet):
+			#inc mode
+			if self.incrementalMode:
+				self.hullPts[:] = []
+				for h in self.hullStack:
+					self.hullPts.append(self.pSet[h])
+				self.setupPlot()
+				plt.figure(1).canvas.draw()
+				print "a"
+				raw_input()
 			hsSize = len(self.hullStack)
 			if graham.isLeftTurn( self.pSet[self.hullStack[hsSize-2]], self.pSet[self.hullStack[hsSize-1]], self.pSet[p] ):
 				self.hullStack.append(p)
@@ -87,6 +97,11 @@ class graham:
 			p+=1
 
 		self.hullStack.append(0)
+
+
+		self.hullPts[:] = []
+		for h in self.hullStack:
+			self.hullPts.append(self.pSet[h])
 
 
 
@@ -125,13 +140,14 @@ class graham:
 		plt.clf()
 		x = []
 		y = []
+
+		if len(self.pSet) == 0:
+			plt.plot(0,0)
+			return
 		for n in range(len(self.pSet)):
 			x.append(self.pSet[n][0])
 			y.append(self.pSet[n][1])
 
-		self.hullPts[:] = []
-		for h in self.hullStack:
-			self.hullPts.append(self.pSet[h])
 
 		hx = []
 		hy = []
@@ -139,16 +155,16 @@ class graham:
 			hx.append(self.hullPts[n][0])
 			hy.append(self.hullPts[n][1])
 
-		minX = min(x) - 200
-		minY = min(y) - 200
-		maxX = max(x) + 200
-		maxY = max(y) + 200
+		#minX = min(x) - 20
+		#minY = min(y) - 20
+		#maxX = max(x) + 20
+		#maxY = max(y) + 20
 
 		plt.plot(x,y,'bo')
 		plt.plot(hx,hy,'b-')
 		plt.plot(hx,hy,'ro')
 
-		plt.axis([minX, maxX, minY, maxY])
+		#plt.axis([minX, maxX, minY, maxY])
 
 
 	def showPlot(self):
