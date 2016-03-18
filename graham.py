@@ -8,6 +8,7 @@ class graham:
 		self.hullPts = []
 
 		self.incrementalMode = True
+		self.computing = False
 
 		cid = plt.figure(1).canvas.mpl_connect('button_press_event', self.onClick)
 
@@ -33,6 +34,8 @@ class graham:
 		self.pSet.append(p)
 
 	def onClick(self, event):
+		if self.computing:
+			return
 		if (event.xdata is None) or (event.ydata is None):
 			return
 		if event.button == 1:
@@ -47,19 +50,13 @@ class graham:
 
 
 	def computeHull(self):
+		self.computing = True
+
 		if len(self.pSet) == 0:
 			return
 
 		# find the lowest point of the set - right wins ties
-		lowIdx = 0
-		min = self.pSet[0][1]
-		for p in range(len(self.pSet)):
-			if (self.pSet[p][1] < min):
-				lowIdx = p
-				min = self.pSet[p][1]
-			if (self.pSet[p][1] == min):
-				if (self.pSet[p][0] > self.pSet[lowIdx][0]):
-					lowIdx = p
+		lowIdx = self.findStartPoint()
 
 		# put the bottom right point at the start of the pointSet
 		self.pSet[0], self.pSet[lowIdx] = self.pSet[lowIdx], self.pSet[0]
@@ -71,7 +68,7 @@ class graham:
 		self.pSet = sorted(self.pSet[1:], cmp=self.thetaCompare)
 		self.pSet.insert(0,self.lowPt)
 
-		#initialize the hullStack with the lowest point and min theta
+		#initialize the hullStack with the lowest point and min theta point
 		self.hullStack = []
 		self.hullStack.append(0)
 		self.hullStack.append(1)
@@ -79,15 +76,15 @@ class graham:
 		#iterate over the theta list and find the CH
 		p = 2
 		while p < len(self.pSet):
-			#inc mode
+			#incremental mode
 			if self.incrementalMode:
 				self.hullPts[:] = []
 				for h in self.hullStack:
 					self.hullPts.append(self.pSet[h])
 				self.setupPlot()
 				plt.figure(1).canvas.draw()
-				print "a"
-				raw_input()
+				plt.waitforbuttonpress()
+
 			hsSize = len(self.hullStack)
 			if graham.isLeftTurn( self.pSet[self.hullStack[hsSize-2]], self.pSet[self.hullStack[hsSize-1]], self.pSet[p] ):
 				self.hullStack.append(p)
@@ -103,6 +100,21 @@ class graham:
 		for h in self.hullStack:
 			self.hullPts.append(self.pSet[h])
 
+		self.computing = False
+
+
+	def findStartPoint(self):
+		lowIdx = 0
+		min = self.pSet[0][1]
+		for p in range(len(self.pSet)):
+			if (self.pSet[p][1] < min):
+				lowIdx = p
+				min = self.pSet[p][1]
+			if (self.pSet[p][1] == min):
+				if (self.pSet[p][0] > self.pSet[lowIdx][0]):
+					lowIdx = p
+
+		return lowIdx
 
 
 	def thetaCompare(self,a,b):
@@ -112,7 +124,7 @@ class graham:
 			return -1
 		if not lt:
 			return 1
-		if lt is none: #colinear
+		if lt is none: #collinear
 			distA = sqrt(pow((a[0]-lowPt[0]),2) + pow((a[1]-lowPt[1]),2))
 			distB = sqrt(pow((b[0]-lowPt[0]),2) + pow((b[1]-lowPt[1]),2))
 			if (distA<distB):
@@ -143,6 +155,11 @@ class graham:
 
 		if len(self.pSet) == 0:
 			plt.plot(0,0)
+			minX = -1
+			minY = -1
+			maxX = 1
+			maxY = 1
+			plt.axis([minX, maxX, minY, maxY])
 			return
 		for n in range(len(self.pSet)):
 			x.append(self.pSet[n][0])
@@ -160,6 +177,7 @@ class graham:
 		#maxX = max(x) + 20
 		#maxY = max(y) + 20
 
+
 		plt.plot(x,y,'bo')
 		plt.plot(hx,hy,'b-')
 		plt.plot(hx,hy,'ro')
@@ -169,3 +187,7 @@ class graham:
 
 	def showPlot(self):
 		plt.show()
+
+	def refreshPlot(self):
+		plt.figure(1).canvas.draw()
+
