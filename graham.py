@@ -7,13 +7,14 @@ class graham:
 		self.pSet = []
 		self.hullPts = []
 
-		self.incrementalMode = True
+		self.incrementalMode = True  # true to click through each step of finding the CH on the plot
 		self.computing = False
 
 		cid = plt.figure(1).canvas.mpl_connect('button_press_event', self.onClick)
 
 
 
+	# Generates a random set of points of length n
 	@staticmethod
 	def genRandPts(n):
 		pts = []
@@ -27,12 +28,17 @@ class graham:
 		return pts
 
 
+	# Sets the pointset to compute the convex hull of
 	def setPointSet(self, p):
 		self.pSet = p
 
+
+	# Add a point to the pointset
 	def addPoint(self, p):
 		self.pSet.append(p)
 
+
+	# Callback for click events on the plot
 	def onClick(self, event):
 		if self.computing:
 			return
@@ -49,6 +55,7 @@ class graham:
 
 
 
+	# Computes the Convex Hull of the pointset
 	def computeHull(self):
 		self.computing = True
 
@@ -103,6 +110,8 @@ class graham:
 		self.computing = False
 
 
+
+	# Finds the lowest point in the pointset.  The point farthest to the right wins ties.
 	def findStartPoint(self):
 		lowIdx = 0
 		min = self.pSet[0][1]
@@ -117,6 +126,7 @@ class graham:
 		return lowIdx
 
 
+	# Comparator for determining theta order with respect to the lowest point ( found in findStartPoint() )
 	def thetaCompare(self,a,b):
 		lt = self.isLeftTurn(self.lowPt, a, b)
 
@@ -133,6 +143,7 @@ class graham:
 				return 1
 
 
+	# Returns true if a -> b -> c is a right turn
 	@staticmethod
 	def isLeftTurn(a,b,c):
 		d = graham.det( list(np.array(c)-np.array(a)), list(np.array(b)-np.array(a)) )
@@ -143,11 +154,13 @@ class graham:
 		return None
 
 
+	# Cross Product a x b
 	@staticmethod
 	def det(a,b):
 		return ((a[0]*b[1])-(b[0]*a[1]))
 
 
+	# sets up the plotter
 	def setupPlot(self):
 		plt.clf()
 		x = []
@@ -172,10 +185,10 @@ class graham:
 			hx.append(self.hullPts[n][0])
 			hy.append(self.hullPts[n][1])
 
-		#minX = min(x) - 20
-		#minY = min(y) - 20
-		#maxX = max(x) + 20
-		#maxY = max(y) + 20
+		minX = min(x) - 20
+		minY = min(y) - 20
+		maxX = max(x) + 20
+		maxY = max(y) + 20
 
 
 		plt.plot(x,y,'bo')
@@ -185,9 +198,11 @@ class graham:
 		#plt.axis([minX, maxX, minY, maxY])
 
 
+	# Displays the plot
 	def showPlot(self):
 		plt.show()
 
+	# Refreshes the plot
 	def refreshPlot(self):
 		plt.figure(1).canvas.draw()
 
